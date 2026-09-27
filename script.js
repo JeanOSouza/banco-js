@@ -4,15 +4,36 @@ const deposito = document.querySelector(".deposito");
 const sair = document.querySelector(".sair");
 const mensagens = document.querySelector(".mensagens");
 const valores = document.querySelector(".valores");
-
 const saldoDisponivel = document.querySelector(".saldoDisponivel");
+const historicoCampo = document.querySelector(".historicoCampo");
+
 let saldo = 100;
+
+let historicoSaldo = [];
 
 //Consutar saldo
 
 consultaSaldo.addEventListener("click", function (e) {
   saldoDispo();
+
+  valores.textContent = "";
+  createButton("Extrato", mostrarHistorico);
+  createButton("Saque", mostrarSaques);
+  createButton("Deposito", mostrarDepositos);
+  createButton("Total", calcularTotais);
 });
+
+function createButton(nomeBotao, acao) {
+  const buttonC = document.createElement("button");
+  buttonC.textContent = nomeBotao;
+  valores.appendChild(buttonC);
+
+  buttonC.addEventListener("click", function () {
+    console.log(`Cliquei em ${nomeBotao}`);
+    acao();
+  });
+}
+
 function saldoDispo() {
   saldoDisponivel.textContent = `Saldo disponivel : R$ ${saldo}`;
 }
@@ -23,6 +44,7 @@ sacar.addEventListener("click", function (e) {
 });
 
 function inputSaque() {
+  valores.textContent = "";
   //criando input
   const novoInput = document.createElement("input");
   novoInput.placeholder = "Qual valor deseja sacar";
@@ -41,9 +63,12 @@ function inputSaque() {
 }
 
 function saque(valorSaque) {
+  mensagens.textContent = "";
   if (valorSaque <= saldo && valorSaque > 0) {
     saldo -= valorSaque;
+    historicoSaldo.push({ tipo: "saque", valor: valorSaque });
     saldoDisponivel.textContent = `Saldo disponivel: R$ ${saldo}`;
+    mostrarHistorico();
   } else if (valorSaque > saldo) {
     saldoDisponivel.textContent = `Você não possui saldo suficiente, seu saldo é de ${saldo}`;
     mensagens.textContent = "Tente Novamente!!";
@@ -56,6 +81,7 @@ function saque(valorSaque) {
 deposito.addEventListener("click", inputDeposito);
 
 function inputDeposito() {
+  valores.textContent = "";
   const novoInput = document.createElement("input");
   novoInput.placeholder = "Qual valor deseja depositar";
   valores.append(novoInput);
@@ -72,7 +98,84 @@ function inputDeposito() {
 
 // if de forma ternaria
 function depositar(valorDeposito) {
-  valorDeposito > 0 ?
-    (saldoDisponivel.textContent = `Saldo disponivel : R$ ${(saldo += valorDeposito)}`)
-  : (saldoDisponivel.textContent = "Deposite um valor valido");
+  if (valorDeposito > 0) {
+    saldo += valorDeposito;
+    saldoDisponivel.textContent = `Saldo disponivel : R$ ${saldo}`;
+    historicoSaldo.push({ tipo: "deposito", valor: valorDeposito });
+    mostrarHistorico();
+  } else {
+    saldoDisponivel.textContent = "Deposite um valor valido";
+  }
+}
+//mostrar historico do saldo na tela
+
+function mostrarHistorico() {
+  historicoCampo.textContent = "";
+  for (let histFunc of historicoSaldo) {
+    const hist = document.createElement("p");
+    historicoCampo.appendChild(hist);
+    hist.textContent = `${histFunc.tipo}: R$ ${histFunc.valor}`;
+  }
+}
+
+// mostrar apenas saques
+function mostrarSaques() {
+  historicoCampo.textContent = "";
+  for (let histFunc of historicoSaldo) {
+    if (histFunc.tipo === "saque") {
+      const pElement = document.createElement("p");
+      historicoCampo.append(pElement);
+      pElement.textContent = `${histFunc.tipo}: R$ ${histFunc.valor}`;
+    }
+  }
+}
+
+//mostrar apenas depositos
+function mostrarDepositos() {
+  historicoCampo.textContent = "";
+  for (let histFunc of historicoSaldo) {
+    if (histFunc.tipo === "deposito") {
+      const pElement = document.createElement("p");
+      historicoCampo.append(pElement);
+      pElement.textContent = `${histFunc.tipo}: R$ ${histFunc.valor}`;
+    }
+  }
+}
+
+//
+function calcularTotais() {
+  let totalDepositos = 0;
+  let totalSaques = 0;
+  let resultado = 0;
+  historicoCampo.textContent = "";
+  for (let histFunc of historicoSaldo) {
+    if (histFunc.tipo === "deposito") {
+      totalDepositos += histFunc.valor;
+    }
+    if (histFunc.tipo === "saque") {
+      totalSaques += histFunc.valor;
+    }
+  }
+  resultado = totalDepositos - totalSaques;
+  //deposito
+  const pElementDep = document.createElement("p");
+  pElementDep.textContent = `Total deposito R$${totalDepositos}`;
+  historicoCampo.append(pElementDep);
+  //saque
+  const pElementSaq = document.createElement("p");
+  pElementSaq.textContent = `Total saque R$${totalSaques}`;
+  historicoCampo.append(pElementSaq);
+  //total
+  const pElementTotal = document.createElement("p");
+  pElementTotal.textContent = `Total R$${resultado}`;
+  historicoCampo.append(pElementTotal);
+}
+
+//sairBanco
+
+sair.addEventListener("click", function () {
+  sairBtn();
+});
+function sairBtn() {
+  mensagens.textContent = "Operação encerrada.";
 }
